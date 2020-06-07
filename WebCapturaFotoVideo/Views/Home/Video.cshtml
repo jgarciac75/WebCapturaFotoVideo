@@ -1,0 +1,41 @@
+﻿
+@{
+  ViewBag.Title = "Index";
+}
+
+<h2>Capturar Video</h2>
+
+<div class="row">
+  <div class="col-md-3">Dispositivo de Audio:</div>
+  <div class="col-md-3">
+    <select id="audioSource"></select>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-3">Dispositivo de Video:</div>
+  <div class="col-md-3">
+    <select id="videoSource"></select>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-6">
+    <video autoplay muted playsinline></video>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-3">
+    <a href="~/Home" class="btn btn-default">
+      <span class="glyphicon glyphicon-home" ></span> Home
+    </a>
+  </div>
+</div>
+@section scripts{
+<script src="~/Scripts/videoCapture.js"></script>
+  <!-- jquery init-->
+  <script type="text/javascript">
+    $(function () {
+
+    });//fin jquery
+  </script>
+}
+

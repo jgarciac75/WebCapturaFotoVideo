@@ -1,0 +1,170 @@
+﻿
+@{
+  ViewBag.Title = "VideoScreenShop";
+}
+
+<h2>Video and ScreenShop</h2>
+
+<div class="row">
+  <div class="col-md-2">Dispositivo de Video:</div>
+  <div class="col-md-3">
+    <div class="form-group">
+      <select class="form-control" id="videoSource"></select>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-2">Dispositivo de Audio:</div>
+  <div class="col-md-3">
+    <div class="form-group">
+      <select class="form-control" id="audioSource"></select>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-6">
+    <video autoplay muted playsinline></video>
+  </div>
+  <div class="col-md-6">
+    <canvas id="canvasFoto"></canvas>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <button id="capture-button" class="btn btn-primary">
+      <span class="glyphicon glyphicon-hd-video"></span> Play
+    </button>
+    <button id="stop-button" class="btn btn-primary">
+      <span class="glyphicon glyphicon-stop"></span> Stop
+    </button>
+    <button id="takePhoto-button" class="btn btn-primary">
+      <span class="glyphicon glyphicon-picture"></span> Take Photo
+    </button>
+    <button id="savePhoto-button" class="btn btn-primary">
+      <span class="glyphicon glyphicon-upload"></span> Save Photo Server
+    </button>
+  </div>
+</div>
+
+@section scripts{
+
+  <script type="text/javascript">
+    const audioSelect = document.querySelector('select#audioSource');
+    const videoSelect = document.querySelector('select#videoSource');
+    const captureVideoButton = document.querySelector('#capture-button');
+    const stopVideoButton = document.querySelector('#stop-button');
+    const takePhotoButton = document.querySelector('#takePhoto-button');
+    const savePhotoButton = document.querySelector("#savePhoto-button");
+    const videoElement = document.querySelector('video');
+    
+    const canvas = document.querySelector('#canvasFoto');
+    let localMediaStream;
+
+    navigator.mediaDevices.enumerateDevices()
+      .then(gotDevices).catch(handleError);
+
+
+    captureVideoButton.onclick = function () {
+      const constraints = {
+        audio: {
+          deviceId: { exact: audioSelect.value }
+        },
+        video: {
+          deviceId: { exact: videoSelect.value }
+        }
+      };
+      navigator.mediaDevices.getUserMedia(constraints).
+        then(handleSuccess).catch(handleError);
+    };
+
+    stopVideoButton.onclick = function () {
+      videoElement.pause();
+      // localMediaStream.stop();
+      //localMediaStream.getTracks()[0].stop();
+      localMediaStream.getTracks().forEach(function (track) {
+        track.stop();
+      });
+    };
+
+    takePhotoButton.onclick = function () {
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      canvas.getContext('2d').drawImage(videoElement, 0, 0);
+    };
+
+    savePhotoButton.onclick = function () {
+      var url = "/Home/GetImage";
+      var dataImage = canvas.toDataURL();
+      $.ajax({
+        type: "POST",
+        url: url,
+        data: {
+          Image: dataImage
+        },
+        success: function (e) {
+          if (e.err === 0) {
+            alert('Imagen Salvada');
+          }
+          else {
+            alert(`Error: ${e.msgErr}`);
+          }
+        },
+        error: function (e) {
+          alert(e.responseText);
+        }
+      
+      }).done(function (o) {
+        console.log('saved');
+      }); 
+    }
+
+    function handleSuccess(stream) {
+      localMediaStream = stream;
+      videoElement.srcObject = stream;
+    }
+
+
+
+    function gotDevices(deviceInfos) {
+      for (let i = 0; i !== deviceInfos.length; ++i) {
+        const deviceInfo = deviceInfos[i];
+        const option = document.createElement('option');
+        option.value = deviceInfo.deviceId;
+          if (deviceInfo.kind === 'audioinput') {
+            option.text = deviceInfo.label ||
+              'microphone ' + (audioSelect.length + 1);
+            audioSelect.appendChild(option);
+          } else if (deviceInfo.kind === 'videoinput') {
+          option.text = deviceInfo.label || 'camera ' +
+            (videoSelect.length + 1);
+          videoSelect.appendChild(option);
+        } else {
+          console.log('Found another kind of device: ', deviceInfo);
+        }
+      }
+    }
+    function getStream() {
+      if (window.stream) {
+        window.stream.getTracks().forEach(function (track) {
+          track.stop();
+        });
+      }
+
+      const constraints = {
+        audio: {
+          deviceId: { exact: audioSelect.value }
+        },
+        video: {
+          deviceId: { exact: videoSelect.value }
+        }
+      };
+
+      navigator.mediaDevices.getUserMedia(constraints).
+        then(gotStream).catch(handleError);
+    }
+
+    function handleError(error) {
+      alert(`Error: ${error}`);
+    }
+  </script>
+}
